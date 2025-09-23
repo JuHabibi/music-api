@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ReleaseType {
+  ALBUM
+  EP
+  SINGLE
+}
+
+model Artist {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  releases Release[]
+
+  @@index([name])
+}
+
+model Genre {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  releases Release[]
+
+  @@index([name])
+}
+
+model Release {
+  id        Int         @id @default(autoincrement())
+  title     String
+  year      Int
+  type      ReleaseType
+  createdAt DateTime    @default(now())
+
+  artists Artist[]
+  genres  Genre[]
+
+  @@unique([title, year])
+  @@index([year])
+  @@index([type])
+}
