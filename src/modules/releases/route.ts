@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify"
-import { ReleasesQuerySchema } from "./schemas"
-import { listReleases } from "./repo.prisma"
+import { ReleasesQuerySchema, CreateReleaseBody } from "./schemas"
+import { listReleases, createRelease } from "./repo.prisma"
 
 export async function releasesRoutes(app: FastifyInstance) {
     app.get("/releases", { schema: { querystring: ReleasesQuerySchema } }, async (req) => {
@@ -22,5 +22,29 @@ export async function releasesRoutes(app: FastifyInstance) {
             limit: q.limit ?? 20,
             offset: q.offset ?? 0
         })
+    })
+
+    app.post('/releases', { schema: { body: CreateReleaseBody } }, async (req, reply) => {
+        const b = req.body as {
+            title: string
+            year: number
+            type: 'ALBUM' | 'EP' | 'SINGLE'
+            artists: string[]
+            genres: string[]
+            releasedAt?: string
+        }
+
+        const norm = (s: string) => s.trim().toLowerCase()
+
+        const created = await createRelease({
+            title: b.title,
+            year: b.year,
+            type: b.type,
+            artists: b.artists.map(norm),
+            genres: b.genres.map(norm),
+            releasedAt: b.releasedAt
+        })
+
+        return reply.code(201).send(created)
     })
 }
